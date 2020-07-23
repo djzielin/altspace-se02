@@ -460,7 +460,7 @@ export default class App {
 
 		this.ourConsole.logMessage("Loading staff items");
 		this.ourSE = new Se02(this);
-		await this.ourSE.createAsyncItems(new MRE.Vector3(2, 2, 0.5),
+		await this.ourSE.createAsyncItems(new MRE.Vector3(2, 1.75, 0.5),
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));
 	}
 	private stopped(){

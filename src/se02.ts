@@ -6,8 +6,7 @@
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import GrabButton from './grabbutton';
-import { listenerCount } from 'process';
-import { equal } from 'assert';
+import Knob from './knob';
 
 enum AuthType {
 	Moderators=0,
@@ -20,57 +19,27 @@ export default class Se02 {
 	public ourInteractionAuth=AuthType.Moderators;
 	public authorizedUser: MRE.User;
 
-	public spawnerScale=2.0;
+	public seScale=1.0;
 	
 	public showBackground=true;
 
-	private sphereMesh: MRE.Mesh;
-	private boxMesh: MRE.Mesh;
+	public sphereMesh: MRE.Mesh;
+	public boxMesh: MRE.Mesh;
+	public cylinderMesh: MRE.Mesh;
 
-	private staffGrabber: GrabButton=null;
 
-	public staffBackground: MRE.Actor=null;
-	private staffRootTime=-1;
+	private seGrabber: GrabButton=null;
+	public seBackground: MRE.Actor=null;
 
-	private isDragging=false;
-	private startPos: MRE.Vector3;
-
-	private cutoffKnob: MRE.Actor=null;
-	private cutoffCenter: MRE.Vector3=new MRE.Vector3(0.165,0,0.24);
-	private startAngle=0.0;
-	private cutoffAngle=0.0;
-
+	private allKnobs: Knob[]=[];
+	private draggingKnobs: Map<MRE.User,Knob>=new Map();
+	
 	constructor(private ourApp: App) {
 
 	}
 
-	private setCutoffRotation(){
-		this.cutoffKnob.transform.local.rotation=
-			MRE.Quaternion.FromEulerAngles(0, this.ourApp.degToRad(this.cutoffAngle), this.ourApp.degToRad(90));
-			
-		const value=(this.cutoffAngle+150)/300.0*127.0;
-		this.ourApp.ourMidiSender.send('[176,74,'+value.toFixed(0)+']');			
-
-	}
-
-
-	public calcQuandrant(angle: number): number{
-		if(angle>=0 && angle<90){
-			return 1;
-		}
-		if((angle>=90 && angle <180) || (angle>=-270 && angle < -180)){
-			return 2;
-		}
-		if((angle>=-180 && angle< -90) || (angle>=180 && angle < 270)){
-			return 3;
-		}
-		if(angle>=-90 && angle < 0){
-			return 4;
-		}
-	}
-
 	public async createAsyncItems(pos: MRE.Vector3, rot=new MRE.Quaternion()) {
-		this.ourApp.ourConsole.logMessage("creating staff asyn items");
+		this.ourApp.ourConsole.logMessage("creating se02 asyn items");
 
 		this.boxMesh = this.ourApp.assets.createBoxMesh('boxMesh', 1.0, 1.0, 1.0);
 		await this.boxMesh.created;
@@ -78,18 +47,14 @@ export default class Se02 {
 		this.sphereMesh = this.ourApp.assets.createSphereMesh('sphereMesh',0.5,10,10);
 		await this.sphereMesh.created;
 
-		const cylinderMesh = this.ourApp.assets.createCylinderMesh('cylinder',1,0.5,"y",10);
+		this.cylinderMesh = this.ourApp.assets.createCylinderMesh('cylinder',1,0.5,"y",10);
+		await this.cylinderMesh.created;
 
 		const seMesh = this.ourApp.assets.createBoxMesh('boxMesh', 2.5, 0.05, 1.0);
 		await seMesh.created;
 
-		this.staffGrabber=new GrabButton(this.ourApp);
-		this.staffGrabber.create(pos,rot);
-
-		const consoleMat = this.ourApp.assets.createMaterial('consolemat', {
-			color: new MRE.Color3(1.0,1.0,1.0) //TODO move material over to app
-		});
-		await consoleMat.created;
+		this.seGrabber=new GrabButton(this.ourApp);
+		this.seGrabber.create(pos,rot);
 
 		const filename = `${this.ourApp.baseUrl}/` + "se_flipped.png";
 		const seTexture = this.ourApp.assets.createTexture("se", {
@@ -101,11 +66,10 @@ export default class Se02 {
 			mainTextureId: seTexture.id
 		});
 
-
-		this.staffBackground = MRE.Actor.Create(this.ourApp.context, {
+		this.seBackground = MRE.Actor.Create(this.ourApp.context, {
 			actor: {
-				parentId: this.staffGrabber.getGUID(),
-				name: "staffBackground",
+				parentId: this.seGrabber.getGUID(),
+				name: "seBackground",
 				appearance: {
 					meshId: seMesh.id,
 					materialId: seMaterial.id,
@@ -113,8 +77,8 @@ export default class Se02 {
 				},
 				transform: {
 					local: {
-						position: new MRE.Vector3(-(this.spawnerScale*2.5 * 0.5 + 0.5), 0, 0 ),
-						scale: new MRE.Vector3(this.spawnerScale, this.spawnerScale, this.spawnerScale)
+						position: new MRE.Vector3(-(this.seScale*2.5 * 0.5 + 0.5), 0, 0 ),
+						scale: new MRE.Vector3(this.seScale, this.seScale, this.seScale)
 					}
 				},
 				collider: {
@@ -124,157 +88,102 @@ export default class Se02 {
 				}
 			}
 		});
+	
+		const buttonBehavior = this.seBackground.setBehavior(MRE.ButtonBehavior);		
 
-		//this.updateStaffWidth();
-		
-		const buttonBehavior = this.staffBackground.setBehavior(MRE.ButtonBehavior);
-		buttonBehavior.onHover("exit", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
+		buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 			if (this.ourApp.isAuthorized(user)) {
-				const penPos = buttonData.targetedPoints[0].localSpacePoint;
-				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
-				this.ourApp.ourConsole.logMessage("user hover has ended at: " + posVector3);
+				if (!this.draggingKnobs.has(user)) {
 
-				if(this.isDragging){
-					this.isDragging=false;
-					this.cutoffKnob.appearance.materialId=this.ourApp.whiteMat.id;
 
+					const penPos = buttonData.targetedPoints[0].localSpacePoint;
+					const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
+
+					let nearestKnob = 1000;
+					let ourKnob = null;
+					for (const knob of this.allKnobs) {
+						const dist = knob.knobCenterPos.subtract(posVector3).length();
+						if (dist < nearestKnob) {
+							nearestKnob = dist;
+							ourKnob = knob;
+						}
+					}
+
+					this.ourApp.ourConsole.logMessage("user: " + user.name + " grabbed knob: " + ourKnob.ourName);
+
+					ourKnob.userPressed(posVector3);
+					this.draggingKnobs.set(user, ourKnob);
 				}
 			}
 		});
 
-		buttonBehavior.onButton("pressed", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-
-			if (this.ourApp.isAuthorized(user)) {
-				const penPos = buttonData.targetedPoints[0].localSpacePoint;
-				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
-
-				this.ourApp.ourConsole.logMessage("user pressed on staff at: " + posVector3);
-				this.startPos=posVector3;
-				this.cutoffKnob.appearance.materialId=this.ourApp.redMat.id;
-				this.isDragging=true;
-
-				const lineVec=this.startPos.subtract(this.cutoffCenter).normalize();
-				this.startAngle=Math.atan2(lineVec.z,lineVec.x)*180.0/Math.PI;
-				
-				this.ourApp.ourConsole.logMessage("computed startAngle: " + this.startAngle);
-
-			}
-		});
-
 		buttonBehavior.onButton("holding", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
-
 			if (this.ourApp.isAuthorized(user)) {
-
-				if (this.isDragging) {
-					this.ourApp.ourConsole.logMessage("----------------------------");
-					this.ourApp.ourConsole.logMessage("user is holding ");
-					//this.ourApp.ourConsole.logMessage("number of points: " + buttonData.targetedPoints.length);
-
-					const numPoints=buttonData.targetedPoints.length;
-
-					const point = buttonData.targetedPoints[numPoints-1];
+				if (this.draggingKnobs.has(user)) {
+					const numPoints = buttonData.targetedPoints.length;
+					const point = buttonData.targetedPoints[numPoints - 1];
 					const penPos = point.localSpacePoint;
 					const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
 					
-					posVector3.y=this.startPos.y; //hack to fix MRE bug
+					const ourKnob=this.draggingKnobs.get(user);
+					this.ourApp.ourConsole.logMessage("user: " + user.name + " is holding knob: " +ourKnob.ourName);
 
-					//const line1=this.startPos.subtract(this.cutoffCenter).normalize();
-					const lineVec=posVector3.subtract(this.cutoffCenter).normalize();
-					//const angleBetween=Math.acos(MRE.Vector3.Dot(line1,line2));
-					//const degrees=angleBetween*180.0/Math.PI;
-
-					let endAngle=Math.atan2(lineVec.z,lineVec.x)*180.0/Math.PI;
-					const rawAngle=endAngle;
-
-					const sQuad=this.calcQuandrant(this.startAngle);
-					const eQuad=this.calcQuandrant(endAngle);
-
-					if(sQuad===2 && eQuad===3){
-						endAngle+=360;
-					}
-					if(sQuad===3 && eQuad===2){
-						endAngle-=360;
-					}					
-
-					let deltaAngle=this.startAngle-endAngle;
-
-					this.cutoffAngle+=deltaAngle;
-					if(this.cutoffAngle>150){
-						this.cutoffAngle=150;
-					}
-					if(this.cutoffAngle<-150){
-						this.cutoffAngle=-150;
-					}
-					this.setCutoffRotation();
-
-					this.ourApp.ourConsole.logMessage("startAngle: " + this.startAngle + " endAngle: " + endAngle);
-					this.ourApp.ourConsole.logMessage("start quad: " + sQuad + " end quad: " + eQuad);
-					this.ourApp.ourConsole.logMessage("delta: " + deltaAngle);
-					this.ourApp.ourConsole.logMessage("cutoff angle: " + this.cutoffAngle);
-
-
-					this.startAngle=rawAngle;
+					ourKnob.userHolding(posVector3);
 				}
 			}
 		});
 
 		buttonBehavior.onButton("released", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
 			if (this.ourApp.isAuthorized(user)) {
-				const penPos = buttonData.targetedPoints[0].localSpacePoint;
-				const posVector3 = new MRE.Vector3(penPos.x, penPos.y, penPos.z);
-				this.ourApp.ourConsole.logMessage("user released on staff at: " + posVector3);
+				if(this.draggingKnobs.has(user)){
+					const ourKnob=this.draggingKnobs.get(user);
+					this.ourApp.ourConsole.logMessage("user: " + user.name + " is releasing knob: " +ourKnob.ourName);
 
-				if(this.isDragging){
-					this.cutoffKnob.appearance.materialId=this.ourApp.whiteMat.id;
-					this.isDragging=false;
-				}
-			}
-		});
-		
-
-		await this.staffBackground.created();
-
-		this.cutoffKnob = MRE.Actor.Create(this.ourApp.context, {
-			actor: {
-				parentId: this.staffBackground.id,
-				name: "knobCenter",
-				appearance: {
-					meshId: cylinderMesh.id,
-					materialId: this.ourApp.whiteMat.id,
-					enabled: true
-				},
-				transform: {
-					local: {
-						position: this.cutoffCenter,
-						scale: new MRE.Vector3(0.1,0.055,0.055),
-						rotation: MRE.Quaternion.FromEulerAngles(0, this.ourApp.degToRad(0), this.ourApp.degToRad(90))
-					}
+					ourKnob.userReleased();
+					this.draggingKnobs.delete(user);
 				}
 			}
 		});
 
-		const knobLine = MRE.Actor.Create(this.ourApp.context, {
-			actor: {
-				parentId: this.cutoffKnob.id,
-				name: "knob",
-				appearance: {
-					meshId: this.boxMesh.id,
-					materialId: this.ourApp.whiteMat.id,
-					enabled: true
-				},
-				transform: {
-					local: {
-						position: new MRE.Vector3(0.0,0,0.5),
-						scale: new MRE.Vector3(1.0,0.1,0.2),
-						//rotation: MRE.Quaternion.FromEulerAngles(0, 0, this.ourApp.degToRad(90))
-					}
-				}				
+		buttonBehavior.onHover("exit", (user: MRE.User, buttonData: MRE.ButtonEventData) => {
+			if (this.ourApp.isAuthorized(user)) {
+				if(this.draggingKnobs.has(user)){
+					const ourKnob=this.draggingKnobs.get(user);
+					this.ourApp.ourConsole.logMessage("user: " + user.name + " is releasing knob: " +ourKnob.ourName);
+
+					ourKnob.userReleased();
+					this.draggingKnobs.delete(user);
+				}
 			}
-		});
+		});	
 
-		this.setCutoffRotation();
+		await this.seBackground.created();
 
-		this.ourApp.ourConsole.logMessage("completed all staff object creation");
+		const cutoffKnob=new Knob(this.ourApp,this,"cutoff",74);
+		await cutoffKnob.createAsyncItems(new MRE.Vector3(0.165,0,0.243),this.seBackground.id);
+		this.allKnobs.push(cutoffKnob);
+
+		const emphasisKnob=new Knob(this.ourApp,this,"emphasis",71);
+		await emphasisKnob.createAsyncItems(new MRE.Vector3(0.33,0,0.243),this.seBackground.id);
+		this.allKnobs.push(emphasisKnob);
+
+		const filtA=new Knob(this.ourApp,this,"filt_attack",47);
+		await filtA.createAsyncItems(new MRE.Vector3(0.165,0,0.082),this.seBackground.id);
+		this.allKnobs.push(filtA);
+
+		const filtD=new Knob(this.ourApp,this,"filt_decay",52);
+		await filtD.createAsyncItems(new MRE.Vector3(0.33,0,0.082),this.seBackground.id);
+		this.allKnobs.push(filtD);
+
+		const filtS=new Knob(this.ourApp,this,"filt_sustain",53);
+		await filtS.createAsyncItems(new MRE.Vector3(0.49,0,0.085),this.seBackground.id);
+		this.allKnobs.push(filtS);
+
+		const filtContour=new Knob(this.ourApp,this,"filt_contour",59);
+		await filtContour.createAsyncItems(new MRE.Vector3(0.66,0,0.243),this.seBackground.id);
+		this.allKnobs.push(filtContour);
+
+		this.ourApp.ourConsole.logMessage("completed all se02 object creation");
 	}
 	
 	private isAuthorized(user: MRE.User): boolean{
