@@ -6,6 +6,7 @@
 import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import Se02 from './se02';
+import { off } from 'process';
 
 export default class Knob {
 	private startPos: MRE.Vector3;
@@ -13,10 +14,18 @@ export default class Knob {
 	private cutoffKnob: MRE.Actor=null;
 	public knobCenterPos: MRE.Vector3;
 	private startAngle=0.0;
-	private cutoffAngle=0.0;
+	private knobAngle=0.0;
 	private ourLine: MRE.Actor=null;
 
-	constructor(private ourApp: App, private ourSE: Se02, public ourName: string, public ourCC: number) {
+	private indexes6cc: number[]=[0,25,51,76,102,127];
+	private indexes6angles: number[]=[-90,-45,0,45,90,135];
+
+	private indexes9cc: number[]=[0,16,32,48,64,79,95,111,127];
+	private indexes9angles: number[]=[-160,-120,-80,-40, 0 , 40, 80, 120,160];
+
+
+	constructor(private ourApp: App, private ourSE: Se02, public ourName: string, public ourCC: number, 
+		public indexType: number, public angleMin: number, public angleMax: number) {
 
 	}
 
@@ -76,12 +85,45 @@ export default class Knob {
 		this.ourLine.transform.local.scale= new MRE.Vector3(length,scale,scale);
 	}
 
-	private setCutoffRotation(){
+	private setRotationNoIndex(){
 		this.cutoffKnob.transform.local.rotation=
-			MRE.Quaternion.FromEulerAngles(0, this.ourApp.degToRad(this.cutoffAngle), this.ourApp.degToRad(90));
+			MRE.Quaternion.FromEulerAngles(0, this.ourApp.degToRad(this.knobAngle), this.ourApp.degToRad(90));
 			
-		const value=(this.cutoffAngle+150)/300.0*127.0;
+		const value=(this.knobAngle+150)/300.0*127.0;
 		this.ourApp.ourMidiSender.send('[176,'+this.ourCC.toFixed(0)+','+value.toFixed(0)+']');			
+	}
+
+	private setRotationIndexed(indexCC: number[],indexAngles: number[]){
+		this.ourApp.ourConsole.logMessage("trying to compute indexed value for angle: " + this.knobAngle);
+
+		let computedIndex=0;
+
+		for(let i=0;i<indexAngles.length-1;i++){
+			const currentValue=indexAngles[i];
+			let nextValue=indexAngles[i+1];
+			const midPt=(nextValue-currentValue)*0.5+currentValue;
+			this.ourApp.ourConsole.logMessage("    midpt: " + midPt);
+			if(this.knobAngle>=currentValue && this.knobAngle<midPt){
+				computedIndex=i;
+				break;
+			}
+			if(i===(indexAngles.length-2)){ //make sure highest value works
+				nextValue++;
+			}
+			if(this.knobAngle>=midPt && this.knobAngle<nextValue){
+				computedIndex=i+1;
+				break;
+			}
+		}
+
+		this.ourApp.ourConsole.logMessage("  knob index is: " + computedIndex);
+
+		this.cutoffKnob.transform.local.rotation=
+			MRE.Quaternion.FromEulerAngles(0, this.ourApp.degToRad(indexAngles[computedIndex]), 
+				this.ourApp.degToRad(90));
+			
+		this.ourApp.ourMidiSender.send('[176,'+this.ourCC.toFixed(0)+',' + 
+			indexCC[computedIndex].toFixed(0)+']');			
 
 	}
 
@@ -136,14 +178,23 @@ export default class Knob {
 
 		let deltaAngle = this.startAngle - endAngle;
 
-		this.cutoffAngle += deltaAngle;
-		if (this.cutoffAngle > 150) {
-			this.cutoffAngle = 150;
+		this.knobAngle += deltaAngle;
+		if (this.knobAngle > this.angleMax) {
+			this.knobAngle = this.angleMax;
 		}
-		if (this.cutoffAngle < -150) {
-			this.cutoffAngle = -150;
+		if (this.knobAngle < this.angleMin) {
+			this.knobAngle = this.angleMin;
 		}
-		this.setCutoffRotation();
+
+		if(this.indexType===0){
+			this.setRotationNoIndex();
+		}
+		if(this.indexType===6){
+			this.setRotationIndexed(this.indexes6cc, this.indexes6angles);
+		}
+		if(this.indexType===9){
+			this.setRotationIndexed(this.indexes9cc, this.indexes9angles);
+		}
 
 		this.startAngle = rawAngle;
 		//this.updateLine(this.cutoffCenter,posVector3);
@@ -213,7 +264,15 @@ export default class Knob {
 		});
 		await knobOuter.created();
 
-		this.setCutoffRotation();
+		if(this.indexType===0){
+			this.setRotationNoIndex();
+		}
+		if(this.indexType===6){
+			this.setRotationIndexed(this.indexes6cc, this.indexes6angles);
+		}
+		if(this.indexType===9){
+			this.setRotationIndexed(this.indexes9cc, this.indexes9angles);
+		}
 
 		this.ourApp.ourConsole.logMessage("completed all knob object creation");
 	}
