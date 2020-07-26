@@ -19,7 +19,7 @@ export default class Piano {
 	public ourInteractionAuth=AuthType.Moderators;
 	public authorizedUser: MRE.User;
 
-	//private ourKeys: MRE.Actor[] = [];
+	private activeNotes: Set<number> = new Set();
 	private ourKeys: Map<number,MRE.Actor>=new Map();
 	public keyboardParent: MRE.Actor;
 	public pianoGrabber: GrabButton=null;
@@ -337,6 +337,10 @@ export default class Piano {
 			this.ourWavPlayer.playSound(note,vel,new MRE.Vector3(0,0,0), 50.0);
 		}
 
+		if(!this.activeNotes.has(note)){
+			this.activeNotes.add(note);
+		}
+
 		this.ourApp.ourMidiSender.send(`[144,${note},${vel}]`)
 
 		this.setFancyKeyColor(note);
@@ -347,8 +351,12 @@ export default class Piano {
 		if(!this.ourKeys.has(note)){
 			return;
 		}
-		const noteNum = note % 12;
 
+		if(!this.activeNotes.has(note)){
+			return;
+		}
+
+		const noteNum = note % 12;
 		const currentPos = this.ourKeys.get(note).transform.local.position;
 
 		this.ourKeys.get(note).transform.local.position =
@@ -359,8 +367,7 @@ export default class Piano {
 		}	
 
 		this.ourApp.ourMidiSender.send(`[128,${note},0]`)
-
-
+		this.activeNotes.delete(note);
 		this.setProperKeyColor(note);
 	}
 }
