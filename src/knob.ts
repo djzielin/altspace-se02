@@ -201,7 +201,7 @@ export default class Knob {
 	}
 
 	public async createAsyncItems(pos: MRE.Vector3, parentID: MRE.Guid) {
-		this.ourApp.ourConsole.logMessage("creating staff asyn items");		
+		this.ourApp.ourConsole.logMessage("creating knob asyn items");		
 		this.knobCenterPos=pos;
 	
 		this.cutoffKnob = MRE.Actor.Create(this.ourApp.context, {
@@ -274,6 +274,6 @@ export default class Knob {
 			this.setRotationIndexed(this.indexes9cc, this.indexes9angles);
 		}
 
-		this.ourApp.ourConsole.logMessage("completed all knob object creation");
+		//this.ourApp.ourConsole.logMessage("completed all knob object creation");
 	}
 }

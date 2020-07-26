@@ -164,111 +164,15 @@ export default class Se02 {
 		await this.seBackground.created();
 
 		/////////////////////////////////////////////////////////////////////////////////////
-		// FILTER / ENVELOPES
+		// CONTROL
 		/////////////////////////////////////////////////////////////////////////////////////
-		const cutoffKnob=new Knob(this.ourApp,this,"cutoff",74,0,-150,150);
-		await cutoffKnob.createAsyncItems(new MRE.Vector3(0.165,0,0.243),this.seBackground.id);
-		this.allKnobs.push(cutoffKnob);
+		const glide=new Knob(this.ourApp,this,"glide",5,0,-150,150);
+		await glide.createAsyncItems(new MRE.Vector3(-1.16,0,0.243),this.seBackground.id);
+		this.allKnobs.push(glide);
 
-		const emphasisKnob=new Knob(this.ourApp,this,"emphasis",71,0,-150,150);
-		await emphasisKnob.createAsyncItems(new MRE.Vector3(0.33,0,0.243),this.seBackground.id);
-		this.allKnobs.push(emphasisKnob);
-
-		const filtContour=new Knob(this.ourApp,this,"filt_contour",59,0,-150,150);
-		await filtContour.createAsyncItems(new MRE.Vector3(0.66,0,0.243),this.seBackground.id);
-		this.allKnobs.push(filtContour);
-
-		const filtA=new Knob(this.ourApp,this,"filt_attack",47,0,-150,150);
-		await filtA.createAsyncItems(new MRE.Vector3(0.165,0,0.082),this.seBackground.id);
-		this.allKnobs.push(filtA);
-
-		const filtD=new Knob(this.ourApp,this,"filt_decay",52,0,-150,150);
-		await filtD.createAsyncItems(new MRE.Vector3(0.33,0,0.082),this.seBackground.id);
-		this.allKnobs.push(filtD);
-
-		const filtS=new Knob(this.ourApp,this,"filt_sustain",53,0,-150,150);
-		await filtS.createAsyncItems(new MRE.Vector3(0.49,0,0.085),this.seBackground.id);
-		this.allKnobs.push(filtS);
-
-		const envA=new Knob(this.ourApp,this,"env_attack",73,0,-150,150);
-		await envA.createAsyncItems(new MRE.Vector3(0.165,0,-0.074),this.seBackground.id);
-		this.allKnobs.push(envA);
-
-		const envD=new Knob(this.ourApp,this,"env_decay",75,0,-150,150);
-		await envD.createAsyncItems(new MRE.Vector3(0.33,0,-0.074),this.seBackground.id);
-		this.allKnobs.push(envD);
-
-		const envS=new Knob(this.ourApp,this,"env_sustain",56,0,-150,150);
-		await envS.createAsyncItems(new MRE.Vector3(0.49,0,-0.074),this.seBackground.id);
-		this.allKnobs.push(envS);
-
-		/////////////////////////////////////////////////////////////////////////////////////
-		// MIXER
-		/////////////////////////////////////////////////////////////////////////////////////
-		const osc1mix=new Knob(this.ourApp,this,"osc1mix",48,0,-150,150);
-		await osc1mix.createAsyncItems(new MRE.Vector3(-0.165,0,0.243),this.seBackground.id);
-		this.allKnobs.push(osc1mix);
-
-		const osc2mix=new Knob(this.ourApp,this,"osc2mix",49,0,-150,150);
-		await osc2mix.createAsyncItems(new MRE.Vector3(-0.165,0,0.082),this.seBackground.id);
-		this.allKnobs.push(osc2mix);
-
-		const osc3mix=new Knob(this.ourApp,this,"osc3mix",50,0,-150,150);
-		await osc3mix.createAsyncItems(new MRE.Vector3(-0.165,0,-0.074),this.seBackground.id);
-		this.allKnobs.push(osc3mix);
-
-		const feedb=new Knob(this.ourApp,this,"feedb",51,0,-150,150);
-		await feedb.createAsyncItems(new MRE.Vector3(0.0,0,0.16),this.seBackground.id);
-		this.allKnobs.push(feedb);
-
-		const noise=new Knob(this.ourApp,this,"noise",41,0,-150,150);
-		await noise.createAsyncItems(new MRE.Vector3(0.0,0.0,0.0),this.seBackground.id);
-		this.allKnobs.push(noise);
-
-		/////////////////////////////////////////////////////////////////////////////////////
-		// XMOD
-		/////////////////////////////////////////////////////////////////////////////////////
-		const xmod1=new Knob(this.ourApp,this,"xmod1",16,0,-150,150);
-		await xmod1.createAsyncItems(new MRE.Vector3(-0.33,0,0.243),this.seBackground.id);
-		this.allKnobs.push(xmod1);
-
-		const xmod2=new Knob(this.ourApp,this,"xmod2",17,0,-150,150);
-		await xmod2.createAsyncItems(new MRE.Vector3(-0.33,0,0.082),this.seBackground.id);
-		this.allKnobs.push(xmod2);
-
-		const xmod3=new Knob(this.ourApp,this,"xmod3",18,0,-150,150);
-		await xmod3.createAsyncItems(new MRE.Vector3(-0.33,0,-0.074),this.seBackground.id);
-		this.allKnobs.push(xmod3);
-
-		/////////////////////////////////////////////////////////////////////////////////////
-		// Delay
-		/////////////////////////////////////////////////////////////////////////////////////
-		const dtime=new Knob(this.ourApp,this,"d_time",82,0,-150,150);
-		await dtime.createAsyncItems(new MRE.Vector3(1.16,0,0.243),this.seBackground.id);
-		this.allKnobs.push(dtime);
-
-		const dregen=new Knob(this.ourApp,this,"d_regen",83,0,-150,150);
-		await dregen.createAsyncItems(new MRE.Vector3(1.16,0,0.082),this.seBackground.id);
-		this.allKnobs.push(dregen);
-
-		const damount=new Knob(this.ourApp,this,"d_amount",91,0,-150,150);
-		await damount.createAsyncItems(new MRE.Vector3(1.16,0,-0.074),this.seBackground.id);
-		this.allKnobs.push(damount);
-
-		/////////////////////////////////////////////////////////////////////////////////////
-		// LFO
-		/////////////////////////////////////////////////////////////////////////////////////
-		const lforate=new Knob(this.ourApp,this,"lfo_rate",102,0,-150,150);
-		await lforate.createAsyncItems(new MRE.Vector3(0.82,0,0.243),this.seBackground.id);
-		this.allKnobs.push(lforate);
-
-		const lfoosc=new Knob(this.ourApp,this,"lfo_osc",103,0,-150,150);
-		await lfoosc.createAsyncItems(new MRE.Vector3(0.82,0,0.082),this.seBackground.id);
-		this.allKnobs.push(lfoosc);
-
-		const lfofilter=new Knob(this.ourApp,this,"lfo_filter",105,0,-150,150);
-		await lfofilter.createAsyncItems(new MRE.Vector3(0.99,0,0.082),this.seBackground.id);
-		this.allKnobs.push(lfofilter);
+		const whlmix=new Knob(this.ourApp,this,"whlmix",13,0,-150,150);
+		await whlmix.createAsyncItems(new MRE.Vector3(-1.16,0,-0.074),this.seBackground.id);
+		this.allKnobs.push(whlmix);
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// OSC
@@ -310,17 +214,115 @@ export default class Se02 {
 		this.allKnobs.push(env1);
 
 		/////////////////////////////////////////////////////////////////////////////////////
-		// CONTROL
+		// XMOD
 		/////////////////////////////////////////////////////////////////////////////////////
-		const glide=new Knob(this.ourApp,this,"glide",5,0,-150,150);
-		await glide.createAsyncItems(new MRE.Vector3(-1.16,0,0.243),this.seBackground.id);
-		this.allKnobs.push(glide);
+		const xmod1=new Knob(this.ourApp,this,"xmod1",16,0,-150,150);
+		await xmod1.createAsyncItems(new MRE.Vector3(-0.33,0,0.243),this.seBackground.id);
+		this.allKnobs.push(xmod1);
 
+		const xmod2=new Knob(this.ourApp,this,"xmod2",17,0,-150,150);
+		await xmod2.createAsyncItems(new MRE.Vector3(-0.33,0,0.082),this.seBackground.id);
+		this.allKnobs.push(xmod2);
 
-		const whlmix=new Knob(this.ourApp,this,"whlmix",13,0,-150,150);
-		await whlmix.createAsyncItems(new MRE.Vector3(-1.16,0,-0.074),this.seBackground.id);
-		this.allKnobs.push(whlmix);
+		const xmod3=new Knob(this.ourApp,this,"xmod3",18,0,-150,150);
+		await xmod3.createAsyncItems(new MRE.Vector3(-0.33,0,-0.074),this.seBackground.id);
+		this.allKnobs.push(xmod3);
 
+		/////////////////////////////////////////////////////////////////////////////////////
+		// MIXER
+		/////////////////////////////////////////////////////////////////////////////////////
+		const osc1mix=new Knob(this.ourApp,this,"osc1mix",48,0,-150,150);
+		await osc1mix.createAsyncItems(new MRE.Vector3(-0.165,0,0.243),this.seBackground.id);
+		this.allKnobs.push(osc1mix);
+
+		const osc2mix=new Knob(this.ourApp,this,"osc2mix",49,0,-150,150);
+		await osc2mix.createAsyncItems(new MRE.Vector3(-0.165,0,0.082),this.seBackground.id);
+		this.allKnobs.push(osc2mix);
+
+		const osc3mix=new Knob(this.ourApp,this,"osc3mix",50,0,-150,150);
+		await osc3mix.createAsyncItems(new MRE.Vector3(-0.165,0,-0.074),this.seBackground.id);
+		this.allKnobs.push(osc3mix);
+
+		const feedb=new Knob(this.ourApp,this,"feedb",51,0,-150,150);
+		await feedb.createAsyncItems(new MRE.Vector3(0.0,0,0.16),this.seBackground.id);
+		this.allKnobs.push(feedb);
+
+		const noise=new Knob(this.ourApp,this,"noise",41,0,-150,150);
+		await noise.createAsyncItems(new MRE.Vector3(0.0,0.0,0.0),this.seBackground.id);
+		this.allKnobs.push(noise);
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// FILTER / ENVELOPES
+		/////////////////////////////////////////////////////////////////////////////////////
+		const cutoffKnob=new Knob(this.ourApp,this,"cutoff",74,0,-150,150);
+		await cutoffKnob.createAsyncItems(new MRE.Vector3(0.165,0,0.243),this.seBackground.id);
+		this.allKnobs.push(cutoffKnob);
+
+		const emphasisKnob=new Knob(this.ourApp,this,"emphasis",71,0,-150,150);
+		await emphasisKnob.createAsyncItems(new MRE.Vector3(0.33,0,0.243),this.seBackground.id);
+		this.allKnobs.push(emphasisKnob);
+
+		const filtContour=new Knob(this.ourApp,this,"filt_contour",59,0,-150,150);
+		await filtContour.createAsyncItems(new MRE.Vector3(0.66,0,0.243),this.seBackground.id);
+		this.allKnobs.push(filtContour);
+
+		const filtA=new Knob(this.ourApp,this,"filt_attack",47,0,-150,150);
+		await filtA.createAsyncItems(new MRE.Vector3(0.165,0,0.082),this.seBackground.id);
+		this.allKnobs.push(filtA);
+
+		const filtD=new Knob(this.ourApp,this,"filt_decay",52,0,-150,150);
+		await filtD.createAsyncItems(new MRE.Vector3(0.33,0,0.082),this.seBackground.id);
+		this.allKnobs.push(filtD);
+
+		const filtS=new Knob(this.ourApp,this,"filt_sustain",53,0,-150,150);
+		await filtS.createAsyncItems(new MRE.Vector3(0.49,0,0.085),this.seBackground.id);
+		this.allKnobs.push(filtS);
+
+		const envA=new Knob(this.ourApp,this,"env_attack",73,0,-150,150);
+		await envA.createAsyncItems(new MRE.Vector3(0.165,0,-0.074),this.seBackground.id);
+		this.allKnobs.push(envA);
+
+		const envD=new Knob(this.ourApp,this,"env_decay",75,0,-150,150);
+		await envD.createAsyncItems(new MRE.Vector3(0.33,0,-0.074),this.seBackground.id);
+		this.allKnobs.push(envD);
+
+		const envS=new Knob(this.ourApp,this,"env_sustain",56,0,-150,150);
+		await envS.createAsyncItems(new MRE.Vector3(0.49,0,-0.074),this.seBackground.id);
+		this.allKnobs.push(envS);		
+	
+		/////////////////////////////////////////////////////////////////////////////////////
+		// LFO
+		/////////////////////////////////////////////////////////////////////////////////////
+		const lforate=new Knob(this.ourApp,this,"lfo_rate",102,0,-150,150);
+		await lforate.createAsyncItems(new MRE.Vector3(0.82,0,0.243),this.seBackground.id);
+		this.allKnobs.push(lforate);
+
+		const lfoosc=new Knob(this.ourApp,this,"lfo_osc",103,0,-150,150);
+		await lfoosc.createAsyncItems(new MRE.Vector3(0.82,0,0.082),this.seBackground.id);
+		this.allKnobs.push(lfoosc);
+
+		const lfofilter=new Knob(this.ourApp,this,"lfo_filter",105,0,-150,150);
+		await lfofilter.createAsyncItems(new MRE.Vector3(0.99,0,0.082),this.seBackground.id);
+		this.allKnobs.push(lfofilter);
+
+		const lfowave=new Knob(this.ourApp,this,"lfo_wave",104,9,-160,160);
+		await lfowave.createAsyncItems(new MRE.Vector3(0.99,0,0.243),this.seBackground.id);
+		this.allKnobs.push(lfowave);
+
+		/////////////////////////////////////////////////////////////////////////////////////
+		// Delay
+		/////////////////////////////////////////////////////////////////////////////////////
+		const dtime=new Knob(this.ourApp,this,"d_time",82,0,-150,150);
+		await dtime.createAsyncItems(new MRE.Vector3(1.16,0,0.243),this.seBackground.id);
+		this.allKnobs.push(dtime);
+
+		const dregen=new Knob(this.ourApp,this,"d_regen",83,0,-150,150);
+		await dregen.createAsyncItems(new MRE.Vector3(1.16,0,0.082),this.seBackground.id);
+		this.allKnobs.push(dregen);
+
+		const damount=new Knob(this.ourApp,this,"d_amount",91,0,-150,150);
+		await damount.createAsyncItems(new MRE.Vector3(1.16,0,-0.074),this.seBackground.id);
+		this.allKnobs.push(damount);
 
 		this.ourApp.ourConsole.logMessage("completed all se02 object creation");
 	}
