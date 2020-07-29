@@ -2,8 +2,8 @@
  * Licensed under the MIT License.
  */
 
-//import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
 import App from './app';
 import GrabButton from './grabbutton';
 import Knob from './knob';
@@ -16,7 +16,7 @@ enum AuthType {
 
 
 export default class Se02 {
-	public ourInteractionAuth=AuthType.Moderators;
+	public ourInteractionAuth=AuthType.All;
 	public authorizedUser: MRE.User;
 
 	public seScale=1.0;
@@ -47,7 +47,7 @@ export default class Se02 {
 		this.sphereMesh = this.ourApp.assets.createSphereMesh('sphereMesh',0.5,10,10);
 		await this.sphereMesh.created;
 
-		this.cylinderMesh = this.ourApp.assets.createCylinderMesh('cylinder',1,0.5,"y",10);
+		this.cylinderMesh = this.ourApp.assets.createCylinderMesh('cylinder',1.0,0.5,'y',10);
 		await this.cylinderMesh.created;
 
 		const seMesh = this.ourApp.assets.createBoxMesh('boxMesh', 2.5, 0.05, 1.0);

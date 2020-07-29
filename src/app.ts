@@ -2,9 +2,9 @@
  * Licensed under the MIT License.
  */
 
-//import * as MRE from '@microsoft/mixed-reality-extension-sdk';
-import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
-import { Session } from '../../mixed-reality-extension-sdk/packages/sdk/built/internal/adapters/multipeer'
+import * as MRE from '@microsoft/mixed-reality-extension-sdk';
+//import * as MRE from '../../mixed-reality-extension-sdk/packages/sdk/';
+//import { Session } from '../../mixed-reality-extension-sdk/packages/sdk/built/internal/adapters/multipeer'
 
 import {PianoReceiver, RCallback} from './receiver'
 import Piano from './piano'
@@ -69,8 +69,7 @@ export default class App {
 	}
 	
 	constructor(public context: MRE.Context, public baseUrl: string, public baseDir: string,
-		public ourReceiver: PianoReceiver, public ourOscSender: OscSender, public ourMidiSender: MidiSender, 
-		public session: Session) {
+		public ourReceiver: PianoReceiver, public ourOscSender: OscSender, public ourMidiSender: MidiSender) {
 		this.ourConsole=new Console(this);
 
 		this.assets = new MRE.AssetContainer(context);
@@ -159,20 +158,20 @@ export default class App {
 		const rHand: MRE.Actor = null;
 		const lHand: MRE.Actor = null;
 		
-		let id = MRE.ZeroGuid;
+		/*let id = MRE.ZeroGuid;
 		const clients = this.session.clients;
 		for (const client of clients) {
 			if (client.userId === user.id) {
 				id = client.id;
 				break;
 			}
-		}	
+		}*/	
 
 		const ourUser = {
 			name: user.name,
 			user: user,
 			userID: user.id,
-			clientId: id,
+			clientId: user.id,
 			authButton: null as Button,
 			handButton: null as Button,
 			rHand: rHand,
@@ -186,7 +185,7 @@ export default class App {
 		}
 
 		this.addHands(ourUser);
-		this.updateUserButtons();
+		//this.updateUserButtons();
 
 		/*const particleActor = MRE.Actor.CreateFromLibrary(this.context, {
 			resourceId: "artifact:1520871632212591055",
@@ -221,11 +220,6 @@ export default class App {
 		return null;
 	}
 
-	private makeAuthoritative(ourUser: UserProperties) {
-		this.ourConsole.logMessage("making user: " + ourUser.name + " authoritative!");
-		this.session.setAuthoritativeClient(ourUser.clientId); //can't be user.id! needs to be client.id!
-		this.updateUserButtons();
-	}
 
 	private addHands(ourUser: UserProperties){
 		this.ourConsole.logMessage("creating hands for: " + ourUser.name);
@@ -236,82 +230,8 @@ export default class App {
 			new MRE.Vector3(0.03, 0.03, 0.14));
 	}
 
-	/*private removeHands(ourUser: UserProperties){
-		this.ourConsole.logMessage("removing hands for: " + ourUser.name);
 
-		if(ourUser.rHand){
-			ourUser.rHand.destroy();
-			ourUser.rHand=null;
-		}
-
-		if(ourUser.lHand){
-			ourUser.lHand.destroy();
-			ourUser.lHand=null;
-		}
-	}
-
-	private updateUserHands(ourUser: UserProperties) {
-		if(ourUser.handButton.getValue()){
-			this.addHands(ourUser);
-		} else{
-			this.removeHands(ourUser);
-		}
-	}
-*/
-	private updateUserButtons() {
-		this.ourConsole.logMessage("updating user buttons");
-
-		if(!this.session){ //prevent errors when last user leaves (session seems to be destroyed already)
-			return;
-		}
-		if(!this.session.authoritativeClient){
-			return;
-		}
-
-		const authoritativeUserID = this.session.authoritativeClient.userId;
-		this.ourConsole.logMessage("  authoritative user is currently id: " + authoritativeUserID);
-		this.ourConsole.logMessage("  number of users: " + this.allUsers.length);
-
-		let userCount = 0;
-		for (let i = 0; i < this.allUsers.length; i++) {
-			const ourUser = this.allUsers[i];
-
-			if (ourUser.isModerator) {
-				const authButtonPos = new MRE.Vector3(-0.7, 0, -0.15 - userCount * 0.15);
-				const areWeAuthoritative = (ourUser.userID === authoritativeUserID);
-
-				this.ourConsole.logMessage("  user: " + ourUser.name + " is Auth: " + areWeAuthoritative);
-				if (!ourUser.authButton) { //create a button if we don't already have one
-					this.ourConsole.logMessage("  user needs an Auth button: " + ourUser.name);
-					const ourButton = new Button(this);
-					ourButton.createAsync(authButtonPos, this.menuGrabber.getGUID(), ourUser.name, ourUser.name,
-						areWeAuthoritative, this.makeAuthoritative.bind(this, ourUser)).then(() => {
-							ourUser.authButton = ourButton;
-							ourButton.doVisualUpdates = false; //we'll handle toggling
-						});
-				} else {
-					ourUser.authButton.setPos(authButtonPos);
-					ourUser.authButton.setValue(areWeAuthoritative);
-				}
-
-				userCount++;
-			}
-
-			/*const handButtonPos = new MRE.Vector3(1.5 + Math.floor(i / 10) * 1.0, 0, 0.35 + -(i % 10) * 0.15);
-
-			if (!ourUser.handButton) { //create a button if we don't already have one
-				this.ourConsole.logMessage("  user needs an Hand button: " + ourUser.name);
-				const ourButton = new Button(this);
-				ourButton.createAsync(handButtonPos, this.menuGrabber.getGUID(), ourUser.name, ourUser.name,
-					false, this.updateUserHands.bind(this, ourUser)).then(() => {
-						ourUser.handButton = ourButton;
-					});
-			} else {
-				ourUser.handButton.setPos(handButtonPos);
-			}*/
-		}
-	}
-
+	
 	private userLeft(user: MRE.User) {
 		this.ourConsole.logMessage("user left. name: " + user.name + " id: " + user.id);
 		this.ourConsole.logMessage("  user array pre-deletion is size: " + this.allUsers.length);
@@ -327,7 +247,6 @@ export default class App {
 					ourUser.handButton.destroy();
 				}
 				this.allUsers.splice(i, 1);
-				this.updateUserButtons();
 				
 				if(ourUser.isModerator){
 					const userString=user.id.toString();
@@ -428,24 +347,7 @@ export default class App {
 		await button.createAsync(new MRE.Vector3(-0.7,0,0.5),this.menuGrabber.getGUID(),"Reset","Reset",
 			false, this.doReset.bind(this));
 
-		const authLabel = MRE.Actor.Create(this.context, {
-			actor: {
-				parentId: this.menuGrabber.getGUID(),
-				name: 'authoritativeLabel',
-				text: {
-					contents: "Authoritative:",
-					height: 0.1,
-					anchor: MRE.TextAnchorLocation.MiddleCenter
-				},
-				transform: {
-					local: {
-						position: { x: 0-0.7, y: 0.051, z: 0.0 },
-						rotation: MRE.Quaternion.FromEulerAngles(this.degToRad(90), 0, 0)
-					}
-				}
-			}
-		});
-		await authLabel.created();
+		
 
 		this.ourConsole.logMessage("creating piano keys"); 
 		this.ourPiano = new Piano(this);
