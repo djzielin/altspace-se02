@@ -15,6 +15,7 @@ import GrabButton from './grabbutton';
 import PianoGui from './piano_gui';
 import MidiSender from './midisender';
 import Se02 from './se02';
+import Sequencer from './sequencer';
 
 /**
  * The main class of this app. All the logic goes here.
@@ -38,6 +39,7 @@ export default class App {
 	public ourPiano: Piano = null;
 	public ourPianoGui: PianoGui = null;
 	public ourSE: Se02 = null;
+	public ourSequencer: Sequencer = null;
 
 	public ourConsole: Console = null;
 	public menuGrabber: GrabButton=null;
@@ -364,6 +366,11 @@ export default class App {
 		this.ourSE = new Se02(this);
 		await this.ourSE.createAsyncItems(new MRE.Vector3(2, 1.75, 0.5),
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));
+
+		this.ourSequencer = new Sequencer(this);
+		await this.ourSequencer.createAsyncItems(new MRE.Vector3(-2, 1.75, 0.5));
+
+		//	MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));
 	}
 	private stopped(){
 		MRE.log.info("app", "stopped callback has been called");

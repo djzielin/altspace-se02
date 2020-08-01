@@ -30,86 +30,56 @@ export default class SequencerColumn {
 	public seBackground: MRE.Actor=null;
 
 	private allNotes: MRE.Actor[]=[];
-	
+	private activeCell=-1;
+
 	constructor(private ourSequencer: Sequencer) {
 
 	}
 
-	public async createAsyncItems(startPos: MRE.Vector3, parentID: MRE.Guid) {
-
-		const buttonActor = MRE.Actor.Create(this.ourSequencer.ourApp.context, {
-			actor: {
-				parentId: parentID,
-				name: "toggleButton",
-				appearance: {
-					meshId: this.ourSequencer.ourApp.boxMesh.id,
-					materialId: this.ourSequencer.ourApp.greenMat.id
-				},
-				collider: { geometry: { shape: MRE.ColliderType.Auto } },
-				transform: {
-					local: {
-						position: { x: 0, y: 0.00, z: 0.0 },
-						scale: new MRE.Vector3(0.1, 0.1, 0.1)
+	public async createAsyncItems(height: number, startPos: MRE.Vector3, incAmount: MRE.Vector3, parentID: MRE.Guid) {
+		for (let i = 0; i < height; i++) {
+			const singleButton = MRE.Actor.Create(this.ourSequencer.ourApp.context, {
+				actor: {
+					parentId: parentID,
+					name: "SEQ_button",
+					appearance: {
+						meshId: this.ourSequencer.ourApp.boxMesh.id,
+						materialId: this.ourSequencer.ourApp.grayMat.id
+					},
+					collider: { geometry: { shape: MRE.ColliderType.Auto } },
+					transform: {
+						local: {
+							position: startPos.add(incAmount.multiplyByFloats(i, i, i)),
+							scale: new MRE.Vector3(0.1, 0.1, 0.1)
+						}
 					}
-				}
-			}
-		});
-
-		await buttonActor.created();
-
-		/*
-
-		this.buttonText = MRE.Actor.Create(this.ourApp.context, {
-			actor: {
-				parentId: this.ourHolder.id,
-				name: 'label',
-				text: {
-					contents: "",
-					height: 0.1,
-					anchor: MRE.TextAnchorLocation.MiddleCenter
-				},
-				transform: {
-					local: {
-						position: { x: 0, y: 0.051, z: 0.0 },
-						rotation: MRE.Quaternion.FromEulerAngles(this.ourApp.degToRad(90), 0, 0)
-					}
-				}
-			}
-		});
-		await this.buttonText.created();
-	
-		this.updateDisplayValue();
-	
-		// Set a click handler on the button.
-		this.buttonActor.setBehavior(MRE.ButtonBehavior)
-			.onButton("released", (user: MRE.User) => {
-				const ourRoles = user.properties["altspacevr-roles"];
-				if (ourRoles.includes("moderator") ||
-					ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
-	
-					if (this.ourValue) {
-						this.ourValue=false;
-					} else {
-						this.ourValue=true;
-					}
-	
-					if(this.doVisualUpdates){
-						this.updateDisplayValue();
-					}
-					callback(this.ourValue);
 				}
 			});
-	}
-	
-	
-	for(int x=0;x<16;x++){
-		
 
-	}
-*/
+			await singleButton.created();
+			this.allNotes.push(singleButton);
 
+			singleButton.setBehavior(MRE.ButtonBehavior)
+				.onButton("released", (user: MRE.User) => {
+					if (this.ourSequencer.isAuthorized(user)) {
+						if (this.activeCell === i) {
+							this.allNotes[i].appearance.materialId = this.ourSequencer.ourApp.grayMat.id;
+							this.activeCell = -1;
 
-		this.ourSequencer.ourApp.ourConsole.logMessage("completed all column object creation");
+						} else {
+							if (this.activeCell >= 0) {
+								this.allNotes[this.activeCell].appearance.materialId =
+									this.ourSequencer.ourApp.grayMat.id;
+							}
+							this.allNotes[i].appearance.materialId = this.ourSequencer.ourApp.greenMat.id;
+							this.activeCell = i;
+						}
+						//TODO: send values to sequencer
+					}
+				});
+
+			//TODO: add physics collision to activate as well. 
+		}
 	}
 
 	private isAuthorized(user: MRE.User): boolean {

@@ -8,6 +8,7 @@ import App from './app';
 import GrabButton from './grabbutton';
 import Knob from './knob';
 import Button from './button';
+import SequencerColumn from './sequencer_column';
 
 enum AuthType {
 	Moderators=0,
@@ -32,7 +33,7 @@ export default class Sequencer {
 	private seGrabber: GrabButton=null;
 	public seBackground: MRE.Actor=null;
 
-	private allKnobs: Knob[]=[];
+	private allColumns: SequencerColumn[]=[];
 	private draggingKnobs: Map<MRE.User,Knob>=new Map();
 	
 	constructor(public ourApp: App) {
@@ -57,18 +58,24 @@ export default class Sequencer {
 
 		this.seGrabber=new GrabButton(this.ourApp);
 		this.seGrabber.create(pos,rot);
+
+		const startPos=pos.add(new MRE.Vector3(0,0,0)); //base on seq size
+		const horizInc=new MRE.Vector3(0.15,0,0);
+		const vertInc=new MRE.Vector3(0,0,-0.15)
 		
-		/*for(let x=0;x<16;x++){
-			
-
+		for(let x=0;x<32;x++){
+			const oneColumn=new SequencerColumn(this);
+			await oneColumn.createAsyncItems(24,
+				startPos.add(horizInc.multiplyByFloats(x,x,x)),
+				vertInc,
+				this.seGrabber.getGUID());
+			this.allColumns.push(oneColumn);
 		}
-*/
-
 
 		this.ourApp.ourConsole.logMessage("completed all sequencer object creation");
 	}
 	
-	private isAuthorized(user: MRE.User): boolean{
+	public isAuthorized(user: MRE.User): boolean{
 		if(this.ourInteractionAuth===AuthType.All){
 			return true;
 		}
