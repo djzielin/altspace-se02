@@ -29,8 +29,9 @@ export default class SequencerColumn {
 	private seGrabber: GrabButton=null;
 	public seBackground: MRE.Actor=null;
 
-	private allNotes: MRE.Actor[]=[];
+	private ourCells: MRE.Actor[]=[];
 	private activeCell=-1;
+	private prevNote=-1;
 
 	constructor(private ourSequencer: Sequencer) {
 
@@ -57,21 +58,21 @@ export default class SequencerColumn {
 			});
 
 			await singleButton.created();
-			this.allNotes.push(singleButton);
+			this.ourCells.push(singleButton);
 
 			singleButton.setBehavior(MRE.ButtonBehavior)
 				.onButton("released", (user: MRE.User) => {
 					if (this.ourSequencer.isAuthorized(user)) {
 						if (this.activeCell === i) {
-							this.allNotes[i].appearance.materialId = this.ourSequencer.ourApp.grayMat.id;
+							this.ourCells[i].appearance.materialId = this.ourSequencer.ourApp.grayMat.id;
 							this.activeCell = -1;
 
 						} else {
 							if (this.activeCell >= 0) {
-								this.allNotes[this.activeCell].appearance.materialId =
+								this.ourCells[this.activeCell].appearance.materialId =
 									this.ourSequencer.ourApp.grayMat.id;
 							}
-							this.allNotes[i].appearance.materialId = this.ourSequencer.ourApp.greenMat.id;
+							this.ourCells[i].appearance.materialId = this.ourSequencer.ourApp.greenMat.id;
 							this.activeCell = i;
 						}
 						//TODO: send values to sequencer
@@ -79,6 +80,45 @@ export default class SequencerColumn {
 				});
 
 			//TODO: add physics collision to activate as well. 
+		}
+	}
+
+	public resetHeight(){
+		for(const ourCell of this.ourCells){
+			ourCell.transform.local.position.y=0;
+		}
+	}
+
+	public noteOff(){
+		if(this.prevNote>-1){
+			this.ourSequencer.ourApp.ourMidiSender.send(`[128,${this.prevNote},0]`)
+		}
+		this.prevNote=-1;
+	}
+
+	public noteOn(note: number, vel: number){
+		this.ourSequencer.ourApp.ourMidiSender.send(`[144,${note},${vel}]`)
+		this.prevNote=note;
+	}
+
+	public bumpHeight(){
+		let oneNoteOn=false;
+
+		for(let i=0;i<this.ourCells.length;i++){
+			const ourCell=this.ourCells[i];
+			if(this.activeCell===i){
+				ourCell.transform.local.position.y=0.2;
+				const note=((this.ourCells.length-1)-this.activeCell)+this.ourSequencer.baseNote;
+				this.noteOff();
+				this.noteOn(note,127);
+				oneNoteOn=true;
+			} else{
+				ourCell.transform.local.position.y=0.05;
+			}
+		}
+
+		if(!oneNoteOn){
+			this.noteOff();
 		}
 	}
 

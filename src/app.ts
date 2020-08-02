@@ -368,9 +368,8 @@ export default class App {
 			MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));
 
 		this.ourSequencer = new Sequencer(this);
-		await this.ourSequencer.createAsyncItems(new MRE.Vector3(-2, 1.75, 0.5));
-
-		//	MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));
+		await this.ourSequencer.createAsyncItems(new MRE.Vector3(-2, 1.25, 0.5));
+			//MRE.Quaternion.FromEulerAngles(-90 * Math.PI / 180, 0, 0));
 	}
 	private stopped(){
 		MRE.log.info("app", "stopped callback has been called");
