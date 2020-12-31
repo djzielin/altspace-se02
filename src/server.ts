@@ -24,9 +24,10 @@ dotenv.config();
 const server = new MRE.WebHost({
 	//baseUrl: 'http://altspace-theremin.azurewebsites.net',
 	//baseUrl: 'http://altspace-theremin.ngrok.io',
-	baseUrl: 'http://45.55.43.77',
+	baseUrl: 'http://199.19.73.131:3940',
 	port: process.env.PORT,
-	baseDir: resolvePath(__dirname, '../public')
+	baseDir: resolvePath(__dirname, '../public'),
+	permissions: [MRE.Permissions.UserInteraction]
 });
 
 const ourReceiver: PianoReceiver = new PianoReceiver();

@@ -130,21 +130,21 @@ export default class App {
 	public isAuthorized(user: MRE.User): boolean {
 		const ourRoles = user.properties["altspacevr-roles"];
 
-		if (ourRoles.includes("moderator") || ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
+		//if (ourRoles.includes("moderator") || ourRoles.includes("presenter") || ourRoles.includes("terraformer")) {
 			return true;
-		}
+		//}
 
-		return false;
+		//return false;
 	}
 
 	public isAuthorizedString(user: string): boolean {
-		if(this.moderatorUsers.includes(user)){
+		//if(this.moderatorUsers.includes(user)){
 			//this.ourConsole.logMessage("user is moderator based on GUID");
 			return true;
-		}
+		//}
 
 		//this.ourConsole.logMessage("user is NOT moderator based on GUID");
-		return false;
+		//return false;
 	}
 
 

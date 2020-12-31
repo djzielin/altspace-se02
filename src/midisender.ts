@@ -17,7 +17,7 @@ export default class MidiSender {
 	private oscRemotes: WebSocket[] = [];
 
 	constructor() {
-		const wss: WebSocket.Server = new WebSocket.Server({ port: 3904 });
+		const wss: WebSocket.Server = new WebSocket.Server({ port: 3942 });
 
 		wss.on('connection', (ws: WebSocket) => {
 			MRE.log.info("app", 'a remote midi forwarder has connected');

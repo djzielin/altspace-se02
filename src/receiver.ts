@@ -33,7 +33,7 @@ export class PianoReceiver {
 	}
 
 	constructor() {
-		this.wss = new WebSocket.Server({ port: 3902 });
+		this.wss = new WebSocket.Server({ port: 3941 });
 
 		this.wss.on('connection', (ws: WebSocket) => {
 			MRE.log.info("app", 'remote midi keyboard has connected!');
